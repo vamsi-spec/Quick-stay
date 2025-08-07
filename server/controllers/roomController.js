@@ -72,3 +72,39 @@ export const toggleRoomAvailability = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+export const rateRoom = async (req, res) => {
+  try {
+    const { roomId, rating } = req.body;
+    const userId = req.auth.userId;
+    if (!roomId || !rating || rating < 1 || rating > 5) {
+      return res.json({
+        success: false,
+        message: "Invalid roomId or rating value",
+      });
+    }
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.json({ success: false, message: "Room not found" });
+    }
+    room.ratings = room.ratings.filter(
+      (r) => r.user.toString() !== userId.toString()
+    );
+    room.ratings.push({ user: userId, rating });
+    const total = room.ratings.reduce((sum, r) => sum + r.rating, 0);
+    room.averageRating = parseFloat((total / room.ratings.length).toFixed(1));
+
+    await room.save();
+    res.json({
+      success: true,
+      message: "Rating submitted successfully",
+      averageRating: room.averageRating,
+    });
+  } catch (error) {
+    console.error("RateRoom Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error: " + error.message,
+    });
+  }
+};

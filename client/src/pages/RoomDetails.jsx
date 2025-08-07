@@ -16,12 +16,48 @@ const RoomDetails = () => {
   const [checkOutDate, setCheckOutDate] = useState(null);
   const [guests, setGuests] = useState(1);
   const [isAvailability, setIsAvailability] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [ratingBreakdown, setRatingBreakdown] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const room = rooms.find((room) => room._id === id);
-    room && setRoom(room);
-    room && setMainImage(room.images[0]);
-  }, [rooms]);
+    if (!rooms.length || !id) return;
+
+    const foundRoom = rooms.find((room) => room._id === id);
+    if (!foundRoom) return;
+
+    setRoom(foundRoom);
+    setMainImage(foundRoom.images?.[0]);
+
+    // Rating Breakdown
+    const breakdown = [5, 4, 3, 2, 1].map((star) => ({
+      star,
+      count: foundRoom.ratings?.filter((r) => r.rating === star).length || 0,
+    }));
+    setRatingBreakdown(breakdown);
+
+    // Async token handling
+    const checkToken = async () => {
+      const token = await getToken();
+      if (typeof token === "string" && token.includes(".")) {
+        setIsLoggedIn(true);
+        try {
+          const user = JSON.parse(atob(token.split(".")[1]));
+          const existingRating = foundRoom.ratings?.find(
+            (r) => r.user === user.id
+          );
+          if (existingRating) setUserRating(existingRating.rating);
+        } catch (err) {
+          console.error("Invalid token payload:", err);
+        }
+      } else {
+        setIsLoggedIn(false);
+        console.warn("No valid token found.");
+      }
+    };
+
+    checkToken();
+  }, [rooms, id]);
 
   const checkAvailability = async () => {
     try {
@@ -75,6 +111,35 @@ const RoomDetails = () => {
     }
   };
 
+  const handleRoomRating = async (value) => {
+    if (!isLoggedIn) {
+      toast.error("Please login to rate");
+      return;
+    }
+
+    try {
+      const { data } = await axios.post(
+        "/api/room/rate",
+        { roomId: room._id, rating: value },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      );
+
+      if (data.success) {
+        toast.success("Rating submitted");
+        setUserRating(value);
+        setRoom((prev) => ({
+          ...prev,
+          averageRating: data.averageRating,
+          ratings: data.ratings, // update full list
+        }));
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error("Failed to rate room");
+    }
+  };
+
   return (
     room && (
       <div className="py-35 px-16">
@@ -88,9 +153,19 @@ const RoomDetails = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-1 mt-2">
-          <StartRating />
-          <p className="ml-2">200+ Reviews</p>
+        <div className="flex items-center gap-2 mt-2">
+          <StartRating initialRating={room.averageRating || 0} />
+          <p className="ml-2 text-sm text-gray-600">
+            {room.ratings?.length || 0} Reviews
+          </p>
+        </div>
+
+        <div className="mt-2 space-y-1 text-sm text-gray-500">
+          {ratingBreakdown.map(({ star, count }) => (
+            <p key={star}>
+              {star} ★ - {count} review{count !== 1 ? "s" : ""}
+            </p>
+          ))}
         </div>
 
         <div className="flex items-center gap-1 text-gray-500 mt-2">
@@ -139,6 +214,20 @@ const RoomDetails = () => {
             </div>
           </div>
           <p className="text-2xl font-medium">${room.pricePerNight}/night</p>
+        </div>
+
+        <div className="flex flex-col gap-2 mt-6">
+          <p className="text-l font-medium">Rate this Room</p>
+          <StartRating
+            initialRating={userRating}
+            onRate={handleRoomRating}
+            disabled={!isLoggedIn}
+          />
+          {!isLoggedIn && (
+            <p className="text-sm text-gray-500">
+              Please login to submit a rating.
+            </p>
+          )}
         </div>
 
         <form

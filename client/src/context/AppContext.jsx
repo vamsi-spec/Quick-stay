@@ -37,7 +37,7 @@ export const AppProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const { data } = await axios.get("/api/user", {
-        headers: { Authorization: ` Bearer ${await getToken()}` },
+        headers: { Authorization: `Bearer ${await getToken()}` },
       });
       if (data.success) {
         setIsOwner(data.role === "hotelOwner");
@@ -53,10 +53,8 @@ export const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchUser();
-    }
-  }, [user]);
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     if (user) {

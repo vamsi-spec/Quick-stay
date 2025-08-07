@@ -1,15 +1,37 @@
-import React from 'react'
-import { assets } from '../assets/assets'
+import React, { useEffect, useState } from "react";
 
-const StartRating = ({rating = 4}) => {
+const StartRating = ({ initialRating, onRate }) => {
+  const [rating, setRating] = useState(initialRating || 0);
+
+  const handlerating = (value) => {
+    setRating(value);
+    if (onRate) onRate(value);
+  };
+
+  useEffect(() => {
+    if (initialRating) {
+      setRating(initialRating);
+    }
+  }, [initialRating]);
+
   return (
-    <>
-     {Array(5).fill(0).map((_, index) => (
-      
-             <img key={index}  src={rating > index ? assets.starIconFilled : assets.starIconOutlined} className='h-4.5 w-4.5' alt="" />                  
-      ))}
-    </>
-  )
-}
+    <div>
+      {Array.from({ length: 5 }, (_, index) => {
+        const starValue = index + 1;
+        return (
+          <span
+            key={index}
+            className={`text-xl sm:text-2xl cursor-pointer transition-colors ${
+              starValue <= rating ? "text-yellow-500" : "text-gray-500"
+            }`}
+            onClick={() => handlerating(starValue)}
+          >
+            &#9733;
+          </span>
+        );
+      })}
+    </div>
+  );
+};
 
-export default StartRating
+export default StartRating;

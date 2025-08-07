@@ -8,10 +8,16 @@ const roomSchema = new mongoose.Schema(
     amenities: { type: Array, required: true },
     images: [{ type: String }],
     isAvailable: { type: Boolean, default: true },
+
+    ratings: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rating: { type: Number, required: true },
+      },
+    ],
+    averageRating: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-const Room = mongoose.model("Room", roomSchema);
-
-export default Room;
+export default roomSchema;
