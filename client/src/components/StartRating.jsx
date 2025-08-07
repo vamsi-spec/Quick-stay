@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 
-const StartRating = ({ initialRating, onRate }) => {
-  const [rating, setRating] = useState(initialRating || 0);
+const StartRating = ({ value = 0, onRate, disabled = false }) => {
+  const [rating, setRating] = useState(value);
 
-  const handlerating = (value) => {
-    setRating(value);
-    if (onRate) onRate(value);
+  const handlerating = (star) => {
+    if (!disabled) {
+      setRating(star);
+      onRate?.(star);
+    }
   };
 
   useEffect(() => {
-    if (initialRating) {
-      setRating(initialRating);
+    if (value) {
+      setRating(value);
     }
-  }, [initialRating]);
+  }, [value]);
 
   return (
     <div>

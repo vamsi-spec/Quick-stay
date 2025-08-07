@@ -219,7 +219,7 @@ const RoomDetails = () => {
         <div className="flex flex-col gap-2 mt-6">
           <p className="text-l font-medium">Rate this Room</p>
           <StartRating
-            initialRating={userRating}
+            value={userRating}
             onRate={handleRoomRating}
             disabled={!isLoggedIn}
           />
