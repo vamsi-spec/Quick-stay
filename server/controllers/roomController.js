@@ -75,6 +75,9 @@ export const toggleRoomAvailability = async (req, res) => {
 };
 
 export const rateRoom = async (req, res) => {
+  console.log("rateRoom hit");
+  console.log("Room model type:", typeof Room, Room);
+
   try {
     const { roomId, rating } = req.body;
     const userId = req.auth.userId;

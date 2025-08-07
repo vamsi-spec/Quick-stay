@@ -11,7 +11,7 @@ const roomSchema = new mongoose.Schema(
 
     ratings: [
       {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        user: { type: String, required: true }, // ← changed from ObjectId to String
         rating: { type: Number, required: true },
       },
     ],
