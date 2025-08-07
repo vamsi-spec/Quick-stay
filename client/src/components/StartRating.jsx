@@ -11,9 +11,7 @@ const StartRating = ({ value = 0, onRate, disabled = false }) => {
   };
 
   useEffect(() => {
-    if (value) {
-      setRating(value);
-    }
+    setRating(value);
   }, [value]);
 
   return (
