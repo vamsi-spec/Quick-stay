@@ -45,6 +45,7 @@ export const getRooms = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ success: true, message: rooms });
   } catch (error) {
+    console.error("getRooms ERROR:", error); // <- this helps
     res.json({ success: false, message: error.message });
   }
 };
@@ -83,6 +84,9 @@ export const rateRoom = async (req, res) => {
         message: "Invalid roomId or rating value",
       });
     }
+    console.log("roomId:", roomId);
+    console.log("rating:", rating);
+    console.log("userId:", userId);
     const room = await Room.findById(roomId);
     if (!room) {
       return res.json({ success: false, message: "Room not found" });
