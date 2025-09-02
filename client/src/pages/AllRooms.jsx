@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { assets, facilityIcons, roomsDummyData } from "../assets/assets";
+import { assets, facilityIcons } from "../assets/assets";
 import { useSearchParams } from "react-router-dom";
 import StartRating from "../components/StartRating";
 import { useAppContext } from "../context/AppContext";
@@ -168,8 +168,8 @@ const AllRooms = () => {
                   {room.hotel.name}
                 </p>
                 <div className="flex items-center">
-                  <StartRating />
-                  <p className="ml-2">200+ reviews</p>
+                  <StartRating value={room.averageRating} />
+                  <p className="ml-2">{room.ratings.length}</p>
                 </div>
                 <div className="flex items-cente gap-1 text-gray-600 mt-2 tet-sm">
                   <img src={assets.locationIcon} alt="" />
@@ -245,12 +245,6 @@ const AllRooms = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex justify-center my-8 w-full">
-        <button className="bg-blue-500 py-2 px-4 rounded-md text-white cursor-pointer hover:bg-blue-600 transition">
-          Show More
-        </button>
       </div>
     </>
   );

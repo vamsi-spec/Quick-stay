@@ -154,17 +154,25 @@ const RoomDetails = () => {
         </div>
 
         <div className="flex items-center gap-2 mt-2">
-          <StartRating initialRating={room.averageRating || 0} />
+          <StartRating value={room.averageRating} />
           <p className="ml-2 text-sm text-gray-600">
             {room.ratings?.length || 0} Reviews
           </p>
         </div>
 
-        <div className="mt-2 space-y-1 text-sm text-gray-500">
+        <div className="mt-4 space-y-1 text-sm">
           {ratingBreakdown.map(({ star, count }) => (
-            <p key={star}>
-              {star} ★ - {count} review{count !== 1 ? "s" : ""}
-            </p>
+            <div
+              key={star}
+              className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded-md hover:bg-gray-100 transition max-w-75"
+            >
+              <span className="text-gray-700 font-medium">{star} ★</span>
+              <span className="text-gray-500">
+                {count > 0
+                  ? `${count} ${count === 1 ? "review" : "reviews"}`
+                  : "No reviews"}
+              </span>
+            </div>
           ))}
         </div>
 
@@ -326,8 +334,8 @@ const RoomDetails = () => {
             <div>
               <p className="text-xl">Hosted by {room.hotel.name}</p>
               <div className="flex items-center mt-1">
-                <StartRating />
-                <p className="ml-2">200+ reviews</p>
+                <StartRating value={room.averageRating} />
+                <p className="ml-2">{room.ratings.length}</p>
               </div>
             </div>
           </div>

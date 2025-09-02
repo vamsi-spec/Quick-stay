@@ -2,6 +2,7 @@ import transporter from "../configs/nodemailer.js";
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
+import stripe from "stripe";
 
 const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
@@ -157,5 +158,62 @@ export const getHotelBookingDetails = async (req, res) => {
     });
   } catch (error) {
     res.json({ success: false, message: "Failed to fetch Bookings" });
+  }
+};
+
+export const stripePayment = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    console.log("Received bookingId:", bookingId); // Debug log
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      console.error("Booking not found for ID:", bookingId);
+      return res.json({ success: false, message: "Booking not found" });
+    }
+
+    const roomData = await Room.findById(booking.room).populate("hotel");
+    if (!roomData) {
+      console.error("Room not found for booking:", bookingId);
+      return res.json({ success: false, message: "Room not found" });
+    }
+
+    if (!roomData.hotel) {
+      console.error("Hotel data not found in room:", roomData._id);
+      return res.json({ success: false, message: "Hotel not found" });
+    }
+
+    const totalPrice = booking.totalPrice;
+    const { origin } = req.headers;
+
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+
+    const line_items = [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: roomData.hotel.name,
+          },
+          unit_amount: totalPrice * 100,
+        },
+        quantity: 1,
+      },
+    ];
+
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items,
+      mode: "payment",
+      success_url: `${origin}/my-bookings`,
+      cancel_url: `${origin}/my-bookings`,
+      metadata: {
+        bookingId,
+      },
+    });
+
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    console.error("Stripe Payment Error:", error); // Log the full error
+    res.json({ success: false, message: "Payment Failed" });
   }
 };
