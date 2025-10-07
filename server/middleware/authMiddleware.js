@@ -2,14 +2,17 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    if (!req.auth || !req.auth.userId) {
+    // Call req.auth() instead of using req.auth object
+    const auth = req.auth && typeof req.auth === "function" ? req.auth() : null;
+
+    if (!auth || !auth.userId) {
       return res.status(401).json({
         success: false,
         message: "User not authenticated",
       });
     }
 
-    const user = await User.findById(req.auth.userId);
+    const user = await User.findById(auth.userId);
 
     if (!user) {
       return res.status(404).json({

@@ -1,5 +1,12 @@
+/* eslint-disable react-refresh/only-export-components */
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -19,66 +26,67 @@ export const AppProvider = ({ children }) => {
   const [searchedCities, setSearchedCities] = useState([]);
   const [rooms, setRooms] = useState([]);
 
-  const fetchRooms = async () => {
+  const fetchRooms = useCallback(async () => {
     try {
+      const token = await getToken();
       const { data } = await axios.get("/api/room/", {
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.success) {
-        setRooms(data.message);
-      } else {
-        toast.error(data.message);
-      }
+      if (data.success) setRooms(data.message);
+      else toast.error(data.message);
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [getToken]);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
+      const token = await getToken();
       const { data } = await axios.get("/api/user", {
-        headers: { Authorization: `Bearer ${await getToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (data.success) {
         setIsOwner(data.role === "hotelOwner");
-        setSearchedCities(data.recentSearchCities);
+        setSearchedCities(data.recentSearchCities || []);
       } else {
-        setTimeout(() => {
-          fetchUser();
-        }, 5000);
+        setTimeout(() => fetchUser(), 5000);
       }
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     fetchUser();
-  }, []);
-
+  }, [fetchUser]);
   useEffect(() => {
-    if (user) {
-      fetchRooms();
-    }
-  }, [user]);
+    if (user) fetchRooms();
+  }, [user, fetchRooms]);
 
-  const value = {
-    currency,
-    user,
-    getToken,
-    isowner,
-    setIsOwner,
-    showreg,
-    setShowReg,
-    axios,
-    navigate,
-    searchedCities,
-    setSearchedCities,
-    rooms,
-    setRooms,
-  };
-
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider
+      value={{
+        currency,
+        user,
+        getToken,
+        isowner,
+        setIsOwner,
+        showreg,
+        setShowReg,
+        axios,
+        navigate,
+        searchedCities,
+        setSearchedCities,
+        rooms,
+        setRooms,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
 };
 
+// Custom hook
 export const useAppContext = () => useContext(AppContext);
+
+export default AppContext;
